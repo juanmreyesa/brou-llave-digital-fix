@@ -181,15 +181,13 @@ fi
 
 # ─── Patch B: setInvalidatedByBiometricEnrollment(false) ─────────────
 log "Aplicando Patch B — setInvalidatedByBiometricEnrollment(false) en RSA.getInitParams"
-python3 - "$RSA" <<'PY'
+if grep -q 'setInvalidatedByBiometricEnrollment' "$RSA"; then
+  ok "Patch B ya aplicado (idempotente)"
+else
+  python3 - "$RSA" <<'PY'
 import sys, re, pathlib
 p = pathlib.Path(sys.argv[1])
 src = p.read_text()
-
-if 'setInvalidatedByBiometricEnrollment' in src:
-    print("Patch B ya aplicado (idempotente)", file=sys.stderr)
-    sys.exit(0)
-
 # Anchor: el último setBlockModes(...) + move-result-object p0
 # justo antes del build(). Tolera variación en whitespace.
 anchor = re.compile(
@@ -217,9 +215,10 @@ if n != 1:
     sys.exit(1)
 p.write_text(out)
 PY
-grep -q 'setInvalidatedByBiometricEnrollment' "$RSA" || \
-  { err "Patch B falló al escribir el smali"; exit 5; }
-ok "Patch B aplicado"
+  grep -q 'setInvalidatedByBiometricEnrollment' "$RSA" || \
+    { err "Patch B falló al escribir el smali"; exit 5; }
+  ok "Patch B aplicado"
+fi
 
 # ─── rebuild ─────────────────────────────────────────────────────────
 UNSIGNED="$WORK/unsigned.apk"
