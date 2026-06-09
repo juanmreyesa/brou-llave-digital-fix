@@ -1,0 +1,8 @@
+# keystores y APKs nunca se suben
+*.keystore
+*.apk
+*.apk.idsig
+
+# work dirs
+brou-patch-*/
+work/
